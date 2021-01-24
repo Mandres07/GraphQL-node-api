@@ -5,9 +5,8 @@ module.exports = (req, res, next) => {
    const authHeader = req.get('Authorization');
    // verifica que el header se obtenga bien
    if (!authHeader) {
-      const error = new Error('Not authenticated');
-      error.statusCode = 401;
-      throw error;
+      req.isAuth = false;
+      return next();
    }
    // el header viene con el formtao Bearer TOKEN, por lo que hay q separar el Bearer con split y quedarse solo con la segunda parte del token que es realmente el token
    const token = authHeader.split(' ')[1];
@@ -17,16 +16,16 @@ module.exports = (req, res, next) => {
       decodeToken = jwt.verify(token, 'secret');
    }
    catch (err) {
-      err.statusCode = 500;
-      throw err;
+      req.isAuth = false;
+      return next();
    }
 
    if (!decodeToken) {
-      const error = new Error('Not authenticated');
-      error.statusCode = 401;
-      throw error;
+      req.isAuth = false;
+      return next();
    }
 
    req.userId = decodeToken.userId;
+   req.isAuth = true;
    next();
 };
